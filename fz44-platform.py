@@ -25,15 +25,22 @@ def index():
 def cft_etp():
     res = {}
     data = request.data
+    if d.dbg:
+        print(data)
     ind = data.decode("UTF-8").find("<")
     xml_sig = data.decode("UTF-8")[ind:]
+    if d.dbg:
+        print(xml_sig)
     tree = ET.ElementTree(ET.fromstring(xml_sig))
     root = tree.getroot()
     xml_orig = base64.b64decode(root[1].text).decode("utf-8")
+    if d.dbg:
+        print(xml_orig)
     tree = ET.ElementTree(ET.fromstring(xml_orig))
     root = tree.getroot()
     id = root[0].text
-    print(id)
+    if d.dbg:
+        print(id)
 #    start_time = root[1].text
     start_time = time.time()
     if d.find(id):
@@ -66,6 +73,7 @@ class Daemon(Thread):
             'error': 0,
             'success': 0
     }
+    dbg = 0
 
     def add_elem(self, elem):
         self.queue_list.update(elem)
@@ -78,6 +86,8 @@ class Daemon(Thread):
         return self.queue_list.get(id)
 
     def remove(self, id):
+        if self.dbg:
+            print("remove id " + id)
         return self.queue_list.pop(id)
 
     def run(self):
@@ -92,22 +102,32 @@ class Daemon(Thread):
     def add_error(self):
         self.status.update({'error': self.status['error']+1})
 
+    def set_debug(self, dbg):
+        self.dbg = dbg
+
 
 def createParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--url', nargs='?')
     parser.add_argument('--delay', nargs='?')
+    parser.add_argument('--debug', nargs='?')
     return parser
 
 
 def main(namespace):
     if namespace.delay:
+        print(namespace.delay)
         delay = int(namespace.delay)
     else:
         delay = 1
     if namespace.web:
         d.start()
+    if namespace.debug == '1':
+        dbg = 1
+        d.set_debug(1)
+    else:
+        dbg = 0
     if namespace.url:
         url = namespace.url
     else:
@@ -133,8 +153,12 @@ def main(namespace):
             "</Document><Signature>1</Signature></Package>"
         if namespace.web:
             try:
+                if dbg:
+                    print("Send msg id " + str(i))
                 requests.post(url, data=sig_xml, headers=headers)
-            except:
+            except Exception:
+                if dbg:
+                     formated_error = traceback.format_exception()
                 d.service_status({'service_status': 'service connection failed'})
             else:
                 d.add_elem({hex(i)[2:]: start_time})
