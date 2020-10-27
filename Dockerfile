@@ -1,8 +1,8 @@
 FROM alpine:3.12.1
 COPY requirements.txt /tmp/
-#ENV PIP_PROXY "http://tiger.bspb.ru:8080"
-#ENV HTTP_PROXY "http://tiger.bspb.ru:8080"
-#ENV HTTPS_PROXY "http://tiger.bspb.ru:8080"
+ENV PIP_PROXY "http://tiger.bspb.ru:8080"
+ENV HTTP_PROXY "http://tiger.bspb.ru:8080"
+ENV HTTPS_PROXY "http://tiger.bspb.ru:8080"
 RUN apk add --no-cache python3 py3-pip && \
     pip3 install --no-cache-dir -r /tmp/requirements.txt && \
     rm -f /tmp/requirements.txt
