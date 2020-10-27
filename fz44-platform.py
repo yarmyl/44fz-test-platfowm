@@ -60,7 +60,7 @@ def print_status():
 class Daemon(Thread):
     queue_list = {}
     status = {
-            'cft_status': 'OK',
+            'service_status': 'OK',
             'last_delay': 0,
             'queue': 0,
             'error': 0,
@@ -83,7 +83,7 @@ class Daemon(Thread):
     def run(self):
         serve(app, host='0.0.0.0', port='8080')
 
-    def cft_status(self, error):
+    def service_status(self, error):
         self.status.update(error)
 
     def print_status(self):
@@ -135,10 +135,10 @@ def main(namespace):
             try:
                 requests.post(url, data=sig_xml, headers=headers)
             except:
-                d.cft_status({'service_status': 'service connection failed'})
+                d.service_status({'service_status': 'service connection failed'})
             else:
                 d.add_elem({hex(i)[2:]: start_time})
-                d.cft_status({'cft_status': 'OK'})
+                d.service_status({'service_status': 'OK'})
             finally:
                 print(d.print_queue())
         time.sleep(60*delay)
