@@ -9,5 +9,4 @@ RUN apk add --no-cache python3 py3-pip && \
 WORKDIR /opt/app/
 EXPOSE 8080
 COPY fz44-platform.py /opt/app/
-CMD ["python3", "fz44-platform.py", "--web", "--url", "http://common-api-cft-etp:8080/cft-etp"]
-
+CMD ["python3", "fz44-platform.py", "--web", "--url", "http://common-api-cft-etp:8080/cft-etp", "--delay", "5"]

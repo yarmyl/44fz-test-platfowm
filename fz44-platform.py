@@ -66,29 +66,29 @@ class Daemon(Thread):
             'error': 0,
             'success': 0
     }
-    
+
     def add_elem(self, elem):
         self.queue_list.update(elem)
         self.status.update({'queue': len(self.queue_list)})
-        
+
     def print_queue(self):
         return self.queue_list
-        
+
     def find(self, id):
         return self.queue_list.get(id)
-        
+
     def remove(self, id):
         return self.queue_list.pop(id)
-        
+
     def run(self):
         serve(app, host='0.0.0.0', port='8080')
-        
+
     def cft_status(self, error):
         self.status.update(error)
-        
+
     def print_status(self):
         return self.status
-        
+
     def add_error(self):
         self.status.update({'error': self.status['error']+1})
 
@@ -97,10 +97,15 @@ def createParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--url', nargs='?')
+    parser.add_argument('--delay', nargs='?')
     return parser
 
 
 def main(namespace):
+    if namespace.delay:
+        delay = int(namespace.delay)
+    else:
+        delay = 1
     if namespace.web:
         d.start()
     if namespace.url:
@@ -126,16 +131,17 @@ def main(namespace):
             "<TypeDocument>PartyCheckRq</TypeDocument><Document>" + \
             base64.b64encode(xml.encode("UTF-8")).decode("UTF-8") + \
             "</Document><Signature>1</Signature></Package>"
-        try:
-            requests.post(url, data=sig_xml, headers=headers)
-        except:
-            d.cft_status({'cft_status': 'CFT connection failed'})
-        else:
-            d.add_elem({hex(i)[2:]: start_time})
-            d.cft_status({'cft_status': 'OK'})
-        finally:
-            print(d.print_queue())
-        time.sleep(10*1)
+        if namespace.web:
+            try:
+                requests.post(url, data=sig_xml, headers=headers)
+            except:
+                d.cft_status({'service_status': 'service connection failed'})
+            else:
+                d.add_elem({hex(i)[2:]: start_time})
+                d.cft_status({'cft_status': 'OK'})
+            finally:
+                print(d.print_queue())
+        time.sleep(60*delay)
 
 
 if __name__ == '__main__':
