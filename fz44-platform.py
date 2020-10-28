@@ -117,7 +117,6 @@ def createParser():
 
 def main(namespace):
     if namespace.delay:
-        print(namespace.delay)
         delay = int(namespace.delay)
     else:
         delay = 1
