@@ -11,6 +11,7 @@ from flask import Flask, request, jsonify, url_for, redirect
 import json
 from waitress import serve
 import argparse
+import traceback
 
 
 app = Flask(__name__)
