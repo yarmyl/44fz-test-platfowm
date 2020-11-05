@@ -12,6 +12,7 @@ import json
 from waitress import serve
 import argparse
 import traceback
+import sys
 
 
 app = Flask(__name__)
@@ -27,21 +28,21 @@ def cft_etp():
     res = {}
     data = request.data
     if d.dbg:
-        print(data)
+        print_log(data)
     ind = data.decode("UTF-8").find("<")
     xml_sig = data.decode("UTF-8")[ind:]
     if d.dbg:
-        print(xml_sig)
+        print_log(xml_sig)
     tree = ET.ElementTree(ET.fromstring(xml_sig))
     root = tree.getroot()
     xml_orig = base64.b64decode(root[1].text).decode("utf-8")
     if d.dbg:
-        print(xml_orig)
+        print_log(xml_orig)
     tree = ET.ElementTree(ET.fromstring(xml_orig))
     root = tree.getroot()
     id = root[0].text
     if d.dbg:
-        print(id)
+        print_log(id)
 #    start_time = root[1].text
     start_time = time.time()
     if d.find(id):
@@ -88,7 +89,7 @@ class Daemon(Thread):
 
     def remove(self, id):
         if self.dbg:
-            print("remove id " + id)
+            print_log("remove id " + id)
         return self.queue_list.pop(id)
 
     def run(self):
@@ -114,6 +115,11 @@ def createParser():
     parser.add_argument('--delay', nargs='?')
     parser.add_argument('--debug', nargs='?')
     return parser
+
+
+def print_log(msg):
+    fmt = time.strftime("%Y-%m-%d %X")
+    print('[' + time.strftime(fmt) + '] ' + msg)
 
 
 def main(namespace):
@@ -154,17 +160,18 @@ def main(namespace):
         if namespace.web:
             try:
                 if dbg:
-                    print("Send msg id " + str(i))
+                    print_log("Send msg id " + str(i))
                 requests.post(url, data=sig_xml, headers=headers)
             except Exception:
                 if dbg:
-                     formated_error = traceback.format_exception()
+                    traceback.print_exc(file=sys.stdout)
                 d.service_status({'service_status': 'service connection failed'})
             else:
                 d.add_elem({hex(i)[2:]: start_time})
                 d.service_status({'service_status': 'OK'})
             finally:
-                print(d.print_queue())
+                if dbg:
+                    print_log(d.print_queue())
         time.sleep(60*delay)
 
 
