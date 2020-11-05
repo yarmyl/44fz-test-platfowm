@@ -27,8 +27,8 @@ def index():
 def cft_etp():
     res = {}
     data = request.data.decode("UTF-8")
-    if d.dbg:
-        print_log(data)
+#    if d.dbg:
+#        print_log(data)
     ind = data.find("<")
     xml_sig = data[ind:]
     if d.dbg:
@@ -64,6 +64,29 @@ def print_queue():
 @app.route('/status')
 def print_status():
     return jsonify(d.print_status())
+
+
+@app.route('/send', methods=['POST'])
+def send():
+    data = request.data.decode("UTF-8")
+    if d.dbg:
+        print_log('send message :' + data)
+    start_time = time.time()
+    try:
+        s.send_to_service(data)
+    except Exception as e:
+        if d.dbg:
+            print_log(e)
+        res = {"status": e}
+        d.service_status({'service_status': 'service connection failed'})
+    else:
+        d.add_elem({hex(i)[2:]: start_time})
+        d.service_status({'service_status': 'OK'})
+        res = {"status": "send"}
+    finally:
+        if d.dbg:
+            print_log(str(d.print_queue()))
+    return jsonify(res)
 
 
 class Daemon(Thread):
@@ -122,7 +145,60 @@ def print_log(msg):
     print("[" + time.strftime(fmt) + "] " + msg)
 
 
-def main(namespace):
+class Sender:
+    def __init__(self, url, headers):
+        self.url = url
+        self.headers = headers
+
+    def send_to_service(self, msg=""):
+        if not msg:
+            xml = "<?xml version='1.0' encoding='UTF-8'?>" + \
+                "<PartyCheckRq xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
+                "<MsgID>" + hex(i)[2:] + "</MsgID><MsgTm>" + \
+                time.strftime("%Y-%m-%dT%X", time.gmtime(start_time)) + "</MsgTm>" + \
+                "<OperatorName>BSPB_TEST</OperatorName>" + \
+                "<BankID>SPB</BankID>" + \
+                "<ClientType>1</ClientType>" + \
+                "<INN>7727000000</INN>" + \
+                "<KPP>772700000</KPP></PartyCheckRq>"
+        else:
+            xml = msg
+        sig_xml = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>" + \
+            "<Package xmlns='http://www.sberbank.ru/edo/oep/edo-oep-document'>" + \
+            "<TypeDocument>PartyCheckRq</TypeDocument><Document>" + \
+            base64.b64encode(xml.encode("UTF-8")).decode("UTF-8") + \
+            "</Document><Signature>1</Signature></Package>"
+        requests.post(self.url, data=sig_xml, headers=self.headers)
+
+
+def main(web, delay, dbg):
+    i = 0
+    while 1:
+        i += 1
+        start_time = time.time()
+        if dbg:
+            print_log("Send msg id " + str(i))
+        try:
+            s.send_to_service()
+        except Exception:
+            if dbg:
+                traceback.print_exc(file=sys.stdout)
+            if web:
+                d.service_status({'service_status': 'service connection failed'})
+        else:
+            if web:
+                d.add_elem({hex(i)[2:]: start_time})
+                d.service_status({'service_status': 'OK'})
+        finally:
+            if dbg:
+                print_log(str(d.print_queue()))
+        time.sleep(60*delay)
+
+
+if __name__ == '__main__':
+    d = Daemon()
+    parser = createParser()
+    namespace = parser.parse_args()
     if namespace.delay:
         delay = int(namespace.delay)
     else:
@@ -139,44 +215,5 @@ def main(namespace):
     else:
         url = "http://127.0.0.1:8080/cft-etp"
     headers = {'Content-Type': 'application/xml'}
-    i = 0
-    while 1:
-        i += 1
-        start_time = time.time()
-        xml = "<?xml version='1.0' encoding='UTF-8'?>" + \
-            "<PartyCheckRq xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
-            "<MsgID>" + hex(i)[2:] + "</MsgID><MsgTm>" + \
-            time.strftime("%Y-%m-%dT%X", time.gmtime(start_time)) + "</MsgTm>" + \
-            "<OperatorName>BSPB_TEST</OperatorName>" + \
-            "<BankID>SPB</BankID>" + \
-            "<ClientType>1</ClientType>" + \
-            "<INN>7727000000</INN>" + \
-            "<KPP>772700000</KPP></PartyCheckRq>"
-        sig_xml = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>" + \
-            "<Package xmlns='http://www.sberbank.ru/edo/oep/edo-oep-document'>" + \
-            "<TypeDocument>PartyCheckRq</TypeDocument><Document>" + \
-            base64.b64encode(xml.encode("UTF-8")).decode("UTF-8") + \
-            "</Document><Signature>1</Signature></Package>"
-        if namespace.web:
-            try:
-                if dbg:
-                    print_log("Send msg id " + str(i))
-                requests.post(url, data=sig_xml, headers=headers)
-            except Exception:
-                if dbg:
-                    traceback.print_exc(file=sys.stdout)
-                d.service_status({'service_status': 'service connection failed'})
-            else:
-                d.add_elem({hex(i)[2:]: start_time})
-                d.service_status({'service_status': 'OK'})
-            finally:
-                if dbg:
-                    print_log(str(d.print_queue()))
-        time.sleep(60*delay)
-
-
-if __name__ == '__main__':
-    d = Daemon()
-    parser = createParser()
-    namespace = parser.parse_args()
-    main(namespace)
+    s = Sender(namespace.web, url, headers)
+    main(delay, dbg)
