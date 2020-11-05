@@ -40,7 +40,7 @@ def cft_etp():
         print_log(xml_orig)
     tree = ET.ElementTree(ET.fromstring(xml_orig))
     root = tree.getroot()
-    id = root[0].text
+    id = root[2].text
     if d.dbg:
         print_log(id)
 #    start_time = root[1].text
