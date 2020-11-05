@@ -69,6 +69,9 @@ def print_status():
 @app.route('/send', methods=['POST'])
 def send():
     data = request.data.decode("UTF-8")
+    tree = ET.ElementTree(ET.fromstring(data))
+    root = tree.getroot()
+    id = root[0].text
     if d.dbg:
         print_log('send message :' + data)
     start_time = time.time()
@@ -80,7 +83,7 @@ def send():
         res = {"status": e}
         d.service_status({'service_status': 'service connection failed'})
     else:
-        d.add_elem({hex(i)[2:]: start_time})
+        d.add_elem({id: start_time})
         d.service_status({'service_status': 'OK'})
         res = {"status": "send"}
     finally:
