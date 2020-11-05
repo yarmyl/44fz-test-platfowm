@@ -73,7 +73,7 @@ def send():
         print_log('send message :' + data)
     start_time = time.time()
     try:
-        s.send_to_service(data)
+        s.send_to_service(msg=data, start_time=start_time)
     except Exception as e:
         if d.dbg:
             print_log(e)
@@ -150,7 +150,7 @@ class Sender:
         self.url = url
         self.headers = headers
 
-    def send_to_service(self, msg=""):
+    def send_to_service(self, msg="", i=0, start_time=""):
         if not msg:
             xml = "<?xml version='1.0' encoding='UTF-8'?>" + \
                 "<PartyCheckRq xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
@@ -179,7 +179,7 @@ def main(web, delay, dbg):
         if dbg:
             print_log("Send msg id " + str(i))
         try:
-            s.send_to_service()
+            s.send_to_service(i=i, start_time=start_time)
         except Exception:
             if dbg:
                 traceback.print_exc(file=sys.stdout)
