@@ -26,11 +26,11 @@ def index():
 @app.route('/cft-etp', methods=['POST'])
 def cft_etp():
     res = {}
-    data = request.data
+    data = request.data.decode("UTF-8")
     if d.dbg:
         print_log(data)
-    ind = data.decode("UTF-8").find("<")
-    xml_sig = data.decode("UTF-8")[ind:]
+    ind = data.find("<")
+    xml_sig = data[ind:]
     if d.dbg:
         print_log(xml_sig)
     tree = ET.ElementTree(ET.fromstring(xml_sig))
@@ -119,7 +119,7 @@ def createParser():
 
 def print_log(msg):
     fmt = time.strftime("%Y-%m-%d %X")
-    print('[' + time.strftime(fmt) + '] ' + msg)
+    print("[" + time.strftime(fmt) + "] " + msg)
 
 
 def main(namespace):
@@ -171,7 +171,7 @@ def main(namespace):
                 d.service_status({'service_status': 'OK'})
             finally:
                 if dbg:
-                    print_log(d.print_queue())
+                    print_log(str(d.print_queue()))
         time.sleep(60*delay)
 
 
