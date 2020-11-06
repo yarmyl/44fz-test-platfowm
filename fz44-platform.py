@@ -55,7 +55,8 @@ def cft_etp():
         else:
             d.add_error()
     elif len(root[7]) == 2:
-        s.buisness_ack(id)
+        print_log("Send buisness ACK")
+        s.buisness_ack(root[0].text)
     return jsonify(res)
 
 
@@ -176,7 +177,7 @@ class Sender:
             "</Document><Signature>1</Signature></Package>"
         requests.post(self.url, data=sig_xml, headers=self.headers)
 
-    def buisness_ack(id):
+    def buisness_ack(self, id):
         msg = "<?xml version='1.0' encoding='UTF-8'?>" + \
             "<BusinessRsAck xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
             "<MsgID>0</MsgID><MsgTm>" + \
