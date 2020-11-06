@@ -43,16 +43,19 @@ def cft_etp():
     id = root[2].text
     if d.dbg:
         print_log(id)
-#    start_time = root[1].text
-    start_time = time.time()
-    if d.find(id):
-        d.status.update({
-            'last_delay': start_time-d.remove(id),
-            'success': d.status['success']+1
-        })
-        d.status.update({'queue': len(d.queue_list)})
-    else:
-        d.add_error()
+    if len(root[7]) == 1:
+#       start_time = root[1].text
+        start_time = time.time()
+        if d.find(id):
+            d.status.update({
+                'last_delay': start_time-d.remove(id),
+                'success': d.status['success']+1
+            })
+            d.status.update({'queue': len(d.queue_list)})
+        else:
+            d.add_error()
+    elif len(root[7]) == 2:
+        s.buisness_ack(id)
     return jsonify(res)
 
 
@@ -153,7 +156,7 @@ class Sender:
         self.url = url
         self.headers = headers
 
-    def send_to_service(self, msg="", i=0, start_time=""):
+    def send_to_service(self, msg="", i=0, start_time="", type_doc="PartyCheckRq"):
         if not msg:
             xml = "<?xml version='1.0' encoding='UTF-8'?>" + \
                 "<PartyCheckRq xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
@@ -168,16 +171,28 @@ class Sender:
             xml = msg
         sig_xml = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>" + \
             "<Package xmlns='http://www.sberbank.ru/edo/oep/edo-oep-document'>" + \
-            "<TypeDocument>PartyCheckRq</TypeDocument><Document>" + \
+            "<TypeDocument>" + type_doc + "</TypeDocument><Document>" + \
             base64.b64encode(xml.encode("UTF-8")).decode("UTF-8") + \
             "</Document><Signature>1</Signature></Package>"
         requests.post(self.url, data=sig_xml, headers=self.headers)
 
+    def buisness_ack(id):
+        msg = "<?xml version='1.0' encoding='UTF-8'?>" + \
+            "<BusinessRsAck xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
+            "<MsgID>0</MsgID><MsgTm>" + \
+            time.strftime("%Y-%m-%dT%X", time.gmtime(time.time())) + \
+            "</MsgTm><CorrelationID>" + id + "</CorrelationID>" + \
+            "<OperatorName>BSPB_TEST</OperatorName>" + \
+            "<BankID>SPB</BankID>" + \
+            "<Status><StatusCode>0" + \
+            "</StatusCode></Status></BusinessRsAck>"
+        self.send_to_service(msg=msg, type_doc="BusinessRsAck")
 
 def main(web, delay, dbg):
-    i = 0
+#    i = 0
+    i = 16716287
     while 1:
-        i += 1
+#        i += 1
         start_time = time.time()
         if dbg:
             print_log("Send msg id " + str(i))
