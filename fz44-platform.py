@@ -242,7 +242,7 @@ def main(web, delay, dbg):
         ind = generate_id()
         start_time = time.time()
         if dbg:
-            print_log("Send msg id " + str(i))
+            print_log("Send msg id " + str(ind))
         try:
             s.send_to_service(i=ind, start_time=start_time)
         except Exception:
