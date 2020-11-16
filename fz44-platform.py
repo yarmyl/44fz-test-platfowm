@@ -53,7 +53,8 @@ def cft_etp():
             d.add_req({
                 id: {
                     "start_time": find,
-                    "check_delay": start_time-find
+                    "check_delay": start_time-find,
+                    "time": find
                 }
             })
             d.status.update({'queue': d.len_queue()})
@@ -63,7 +64,7 @@ def cft_etp():
         print_log("Send buisness ACK")
         s.buisness_ack(root[0].text)
         start_time = time.time()
-        if d.find_reqest(id):
+        if d.find_req(id):
             find_dict = d.find(id)
             d.status.update({
                 'last_request_delay': start_time-find_dict["start_time"],
