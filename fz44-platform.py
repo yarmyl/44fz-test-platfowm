@@ -50,7 +50,7 @@ def cft_etp():
                 'last_check_delay': start_time-find,
                 'success': d.status['success']+1
             })
-            d.add_request({
+            d.add_req({
                 id: {
                     "start_time": find,
                     "check_delay": start_time-find
@@ -72,7 +72,7 @@ def cft_etp():
             find_dict.update({
                 "request_delay": start_time-find_dict["start_time"]
             })
-            d.add_elem({id: find_dict})
+            d.add_req({id: find_dict})
         else:
             d.add_error()
     return jsonify(res)
@@ -174,7 +174,7 @@ class Daemon(Thread):
         self.dbg = dbg
 
     def len_queue(self):
-        return len(queue_list)
+        return len(self.queue_list)
 
 
 def createParser():
