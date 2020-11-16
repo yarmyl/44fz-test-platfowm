@@ -83,6 +83,11 @@ def print_queue():
     return jsonify(d.print_queue())
 
 
+@app.route('/print_requests')
+def print_requests():
+    return jsonify(d.print_req())
+
+
 @app.route('/status')
 def print_status():
     return jsonify(d.print_status())
