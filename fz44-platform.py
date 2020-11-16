@@ -65,7 +65,7 @@ def cft_etp():
         s.buisness_ack(root[0].text)
         start_time = time.time()
         if d.find_req(id):
-            find_dict = d.find(id)
+            find_dict = d.find_req(id)
             d.status.update({
                 'last_request_delay': start_time-find_dict["start_time"],
                 'success': d.status['success']+1
