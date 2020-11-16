@@ -54,7 +54,7 @@ def cft_etp():
                 id: {
                     "start_time": find,
                     "check_delay": start_time-find,
-                    "time": find
+                    "time": time.strftime("%Y-%m-%d %X", find)
                 }
             })
             d.status.update({'queue': d.len_queue()})
@@ -188,7 +188,7 @@ def createParser():
 
 
 def print_log(msg):
-    fmt = time.strftime("%Y-%m-%d %X")
+    fmt = "%Y-%m-%d %X"
     print("[" + time.strftime(fmt) + "] " + msg)
 
 
