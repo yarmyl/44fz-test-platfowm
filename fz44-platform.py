@@ -13,6 +13,7 @@ from waitress import serve
 import argparse
 import traceback
 import sys
+import random
 
 
 app = Flask(__name__)
@@ -27,8 +28,6 @@ def index():
 def cft_etp():
     res = {}
     data = request.data.decode("UTF-8")
-#    if d.dbg:
-#        print_log(data)
     ind = data.find("<")
     xml_sig = data[ind:]
     if d.dbg:
@@ -44,19 +43,38 @@ def cft_etp():
     if d.dbg:
         print_log(id)
     if len(root[7]) == 1:
-#       start_time = root[1].text
         start_time = time.time()
-        if d.find(id):
+        if d.find_queue(id):
+            find = d.remove(id)
             d.status.update({
-                'last_delay': start_time-d.remove(id),
+                'last_check_delay': start_time-find,
                 'success': d.status['success']+1
             })
-            d.status.update({'queue': len(d.queue_list)})
+            d.add_request({
+                id: {
+                    "start_time": find,
+                    "check_delay": start_time-find
+                }
+            })
+            d.status.update({'queue': d.len_queue()})
         else:
             d.add_error()
     elif len(root[7]) == 2:
         print_log("Send buisness ACK")
         s.buisness_ack(root[0].text)
+        start_time = time.time()
+        if d.find_reqest(id):
+            find_dict = d.find(id)
+            d.status.update({
+                'last_request_delay': start_time-find_dict["start_time"],
+                'success': d.status['success']+1
+            })
+            find_dict.update({
+                "request_delay": start_time-find_dict["start_time"]
+            })
+            d.add_elem({id: find_dict})
+        else:
+            d.add_error()
     return jsonify(res)
 
 
@@ -87,12 +105,14 @@ def send():
         res = {"status": e}
         d.service_status({'service_status': 'service connection failed'})
     else:
+        if d.find_queue(id):
+            d.remove(id)
         d.add_elem({id: start_time})
         d.service_status({'service_status': 'OK'})
         res = {"status": "send"}
-    finally:
-        if d.dbg:
-            print_log(str(d.print_queue()))
+#    finally:
+#        if d.dbg:
+#            print_log(str(d.print_queue()))
     return jsonify(res)
 
 
@@ -100,22 +120,33 @@ class Daemon(Thread):
     queue_list = {}
     status = {
             'service_status': 'OK',
-            'last_delay': 0,
+            'last_check_delay': 0,
+            'last_request_delay': 0,
             'queue': 0,
             'error': 0,
             'success': 0
     }
     dbg = 0
+    request_list = {}
 
     def add_elem(self, elem):
         self.queue_list.update(elem)
-        self.status.update({'queue': len(self.queue_list)})
+        self.status.update({'queue': self.len_queue()})
+
+    def add_req(self, elem):
+        self.request_list.update(elem)
 
     def print_queue(self):
         return self.queue_list
 
-    def find(self, id):
+    def print_req(self):
+        return self.request_list
+
+    def find_queue(self, id):
         return self.queue_list.get(id)
+
+    def find_req(self, id):
+        return self.request_list.get(id)
 
     def remove(self, id):
         if self.dbg:
@@ -136,6 +167,9 @@ class Daemon(Thread):
 
     def set_debug(self, dbg):
         self.dbg = dbg
+
+    def len_queue(self):
+        return len(queue_list)
 
 
 def createParser():
@@ -161,7 +195,7 @@ class Sender:
         if not msg:
             xml = "<?xml version='1.0' encoding='UTF-8'?>" + \
                 "<PartyCheckRq xmlns='http://www.sberbank.ru/edo/oep/edo-oep-proc'>" + \
-                "<MsgID>" + hex(i)[2:] + "</MsgID><MsgTm>" + \
+                "<MsgID>" + i + "</MsgID><MsgTm>" + \
                 time.strftime("%Y-%m-%dT%X", time.gmtime(start_time)) + "</MsgTm>" + \
                 "<OperatorName>BSPB_TEST</OperatorName>" + \
                 "<BankID>SPB</BankID>" + \
@@ -189,16 +223,23 @@ class Sender:
             "</StatusCode></Status></BusinessRsAck>"
         self.send_to_service(msg=msg, type_doc="BusinessRsAck")
 
+
+def generate_id():
+    ind = "TEST_"
+    rand = lambda: hex(random.randint(0, 15))[2:]
+    for i in range(27):
+        ind += rand()
+    return ind
+
+
 def main(web, delay, dbg):
-#    i = 0
-    i = 16716287
     while 1:
-#        i += 1
+        ind = generate_id()
         start_time = time.time()
         if dbg:
             print_log("Send msg id " + str(i))
         try:
-            s.send_to_service(i=i, start_time=start_time)
+            s.send_to_service(i=ind, start_time=start_time)
         except Exception:
             if dbg:
                 traceback.print_exc(file=sys.stdout)
@@ -206,7 +247,7 @@ def main(web, delay, dbg):
                 d.service_status({'service_status': 'service connection failed'})
         else:
             if web:
-                d.add_elem({hex(i)[2:]: start_time})
+                d.add_elem({ind: start_time})
                 d.service_status({'service_status': 'OK'})
         finally:
             if dbg:
