@@ -54,7 +54,7 @@ def cft_etp():
                 id: {
                     "start_time": find,
                     "check_delay": start_time-find,
-                    "time": time.strftime("%Y-%m-%d %X", find)
+                    "time": time.strftime("%Y-%m-%d %X", time.gmtime(find))
                 }
             })
             d.status.update({'queue': d.len_queue()})
