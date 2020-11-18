@@ -35,8 +35,7 @@ def cft_etp():
     tree = ET.ElementTree(ET.fromstring(xml_sig))
     root = tree.getroot()
     xml_orig = base64.b64decode(root[1].text).decode("utf-8")
-    if d.dbg:
-        print_log(xml_orig)
+    print_log(xml_orig)
     tree = ET.ElementTree(ET.fromstring(xml_orig))
     root = tree.getroot()
     id = root[2].text
@@ -48,15 +47,16 @@ def cft_etp():
             find = d.remove(id)
             d.status.update({
                 'last_check_delay': start_time-find,
-                'success': d.status['success']+1
+                'checks': d.status['checks']+1
             })
-            d.add_req({
-                id: {
-                    "start_time": find,
-                    "check_delay": start_time-find,
-                    "time": time.strftime("%Y-%m-%d %X", time.gmtime(find))
-                }
-            })
+            if d.dbg:
+                d.add_req({
+                    id: {
+                        "start_time": find,
+                        "check_delay": start_time-find,
+                        "time": time.strftime("%Y-%m-%d %X", time.gmtime(find))
+                    }
+                })
             d.status.update({'queue': d.len_queue()})
         else:
             d.add_error()
@@ -68,7 +68,7 @@ def cft_etp():
             find_dict = d.find_req(id)
             d.status.update({
                 'last_request_delay': start_time-find_dict["start_time"],
-                'success': d.status['success']+1
+                'requests': d.status['requests']+1
             })
             find_dict.update({
                 "request_delay": start_time-find_dict["start_time"]
@@ -100,14 +100,12 @@ def send():
     tree = ET.ElementTree(ET.fromstring(data))
     root = tree.getroot()
     id = root[0].text
-    if d.dbg:
-        print_log('send message :' + data)
+    print_log('send message :' + data)
     start_time = time.time()
     try:
         s.send_to_service(msg=data, start_time=start_time)
     except Exception as e:
-        if d.dbg:
-            print_log(e)
+        print_log(e)
         res = {"status": e}
         d.service_status({'service_status': 'service connection failed'})
     else:
@@ -116,9 +114,9 @@ def send():
         d.add_elem({id: start_time})
         d.service_status({'service_status': 'OK'})
         res = {"status": "send"}
-#    finally:
-#        if d.dbg:
-#            print_log(str(d.print_queue()))
+    finally:
+        if d.dbg:
+            print_log(str(d.print_queue()))
     return jsonify(res)
 
 
@@ -129,15 +127,20 @@ class Daemon(Thread):
             'last_check_delay': 0,
             'last_request_delay': 0,
             'queue': 0,
-            'error': 0,
-            'success': 0
+            'errors': 0,
+            'requests': 0,
+            'checks': 0,
+            'responses': 0
     }
     dbg = 0
     request_list = {}
 
     def add_elem(self, elem):
         self.queue_list.update(elem)
-        self.status.update({'queue': self.len_queue()})
+        self.status.update({
+            'queue': self.len_queue(),
+            'responses': self.status['responses']+1
+        })
 
     def add_req(self, elem):
         self.request_list.update(elem)
@@ -155,8 +158,7 @@ class Daemon(Thread):
         return self.request_list.get(id)
 
     def remove(self, id):
-        if self.dbg:
-            print_log("remove id " + id)
+        print_log("remove id " + id)
         return self.queue_list.pop(id)
 
     def run(self):
@@ -242,13 +244,11 @@ def main(web, delay, dbg):
     while 1:
         ind = generate_id()
         start_time = time.time()
-        if dbg:
-            print_log("Send msg id " + str(ind))
+        print_log("Send msg id " + str(ind))
         try:
             s.send_to_service(i=ind, start_time=start_time)
         except Exception:
-            if dbg:
-                traceback.print_exc(file=sys.stdout)
+            traceback.print_exc(file=sys.stdout)
             if web:
                 d.service_status({'service_status': 'service connection failed'})
         else:
