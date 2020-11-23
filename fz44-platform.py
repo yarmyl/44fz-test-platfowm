@@ -186,6 +186,7 @@ def createParser():
     parser.add_argument('--url', nargs='?')
     parser.add_argument('--delay', nargs='?')
     parser.add_argument('--debug', nargs='?')
+    parser.add_argument('--n', nargs='?')
     return parser
 
 
@@ -240,8 +241,9 @@ def generate_id():
     return ind
 
 
-def main(web, delay, dbg):
-    while 1:
+def main(web, delay, dbg, n):
+    i = 0
+    while i <= n:
         ind = generate_id()
         start_time = time.time()
         print_log("Send msg id " + str(ind))
@@ -258,7 +260,11 @@ def main(web, delay, dbg):
         finally:
             if dbg:
                 print_log(str(d.print_queue()))
-        time.sleep(60*delay)
+        if n == 0:
+            time.sleep(60*delay)
+            i = 0
+        else:
+            i += 1
 
 
 if __name__ == '__main__':
@@ -280,6 +286,9 @@ if __name__ == '__main__':
         url = namespace.url
     else:
         url = "http://127.0.0.1:8080/cft-etp"
+    n = 0
+    if namespace.n:
+        n = namespace.n
     headers = {'Content-Type': 'application/xml'}
     s = Sender(url, headers)
-    main(namespace.web, delay, dbg)
+    main(namespace.web, delay, dbg, n)
