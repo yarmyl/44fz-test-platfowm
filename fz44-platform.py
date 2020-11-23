@@ -288,7 +288,7 @@ if __name__ == '__main__':
         url = "http://127.0.0.1:8080/cft-etp"
     n = 0
     if namespace.n:
-        n = namespace.n
+        n = int(namespace.n)
     headers = {'Content-Type': 'application/xml'}
     s = Sender(url, headers)
     main(namespace.web, delay, dbg, n)
