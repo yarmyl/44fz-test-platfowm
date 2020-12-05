@@ -165,12 +165,16 @@ class Daemon(Thread):
         return self.request_list.get(id)
 
     def remove(self, id, bug=0):
-        if bug == 1 and self.queue_list.get(id):
-            self.status.update({
-                'removed': self.status['removed'] + 1
-            })
-        print_log("remove id " + id)
-        return self.queue_list.pop(id)
+        if self.queue_list.get(id):
+            print_log("remove id " + id)
+            start_time = self.queue_list.pop(id)
+            if bug == 1:
+                self.status.update({
+                    'removed': self.status['removed'] + 1,
+                    'queue': self.len_queue()
+                })
+            return start_time
+        return "Haven't id"
 
     def run(self):
         serve(app, host='0.0.0.0', port='8080')
