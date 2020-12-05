@@ -89,6 +89,12 @@ def print_requests():
     return jsonify(d.print_req())
 
 
+@app.route('/remove', methods=['GET'])
+def remove_queue():
+    if request.args.get('id'):
+        return jsonify(d.remove(request.args.get('id')))
+
+
 @app.route('/status')
 def print_status():
     return jsonify(d.print_status())
@@ -130,7 +136,8 @@ class Daemon(Thread):
             'errors': 0,
             'requests': 0,
             'checks': 0,
-            'responses': 0
+            'responses': 0,
+            'removed': 0
     }
     dbg = 0
     request_list = {}
