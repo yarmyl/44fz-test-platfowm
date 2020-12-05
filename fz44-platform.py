@@ -258,6 +258,7 @@ def generate_id():
 
 
 def main(web, delay, dbg, n):
+    time.sleep(10)
     i = 0
     while i <= n:
         ind = generate_id()
