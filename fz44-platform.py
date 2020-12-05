@@ -63,19 +63,20 @@ def cft_etp():
     elif len(root[7]) == 2:
         print_log("Send buisness ACK")
         s.buisness_ack(root[0].text)
-        start_time = time.time()
-        if d.find_req(id):
-            find_dict = d.find_req(id)
-            d.status.update({
-                'last_request_delay': start_time-find_dict["start_time"],
-                'requests': d.status['requests']+1
-            })
-            find_dict.update({
-                "request_delay": start_time-find_dict["start_time"]
-            })
-            d.add_req({id: find_dict})
-        else:
-            d.add_error()
+        if d.dbg:
+            start_time = time.time()
+            if d.find_req(id):
+                find_dict = d.find_req(id)
+                d.status.update({
+                    'last_request_delay': start_time-find_dict["start_time"],
+                    'requests': d.status['requests']+1
+                })
+                find_dict.update({
+                    "request_delay": start_time-find_dict["start_time"]
+                })
+                d.add_req({id: find_dict})
+            else:
+                d.add_error()
     return jsonify(res)
 
 
@@ -186,7 +187,7 @@ class Daemon(Thread):
         return self.status
 
     def add_error(self):
-        self.status.update({'error': self.status['error']+1})
+        self.status.update({'errors': self.status['errors']+1})
 
     def set_debug(self, dbg):
         self.dbg = dbg
