@@ -92,7 +92,7 @@ def print_requests():
 @app.route('/remove', methods=['GET'])
 def remove_queue():
     if request.args.get('id'):
-        return jsonify(d.remove(request.args.get('id')))
+        return jsonify(d.remove(request.args.get('id'), 1))
 
 
 @app.route('/status')
@@ -164,7 +164,11 @@ class Daemon(Thread):
     def find_req(self, id):
         return self.request_list.get(id)
 
-    def remove(self, id):
+    def remove(self, id, bug=0):
+        if bug == 1 and self.queue_list.get(id):
+            self.status.update({
+                'removed': self.status['removed'] + 1
+            })
         print_log("remove id " + id)
         return self.queue_list.pop(id)
 
