@@ -195,6 +195,11 @@ class Daemon(Thread):
     def len_queue(self):
         return len(self.queue_list)
 
+    def clear_timeout(self, t=600):
+        for id in self.queue_list:
+            if (time.time() - self.queue_list[id]) > t:
+                self.remove(id, 1)
+
 
 def createParser():
     parser = argparse.ArgumentParser()
@@ -202,6 +207,7 @@ def createParser():
     parser.add_argument('--url', nargs='?')
     parser.add_argument('--delay', nargs='?')
     parser.add_argument('--debug', nargs='?')
+    parser.add_argument('--timeout', nargs='?')
     parser.add_argument('--n', nargs='?')
     return parser
 
@@ -257,7 +263,7 @@ def generate_id():
     return ind
 
 
-def main(web, delay, dbg, n):
+def main(web, delay, dbg, n, t):
     time.sleep(10)
     i = 0
     while i <= n:
@@ -278,6 +284,7 @@ def main(web, delay, dbg, n):
             if dbg:
                 print_log(str(d.print_queue()))
         if n == 0:
+            d.clear_timeout(t)
             time.sleep(60*delay)
             i = 0
         else:
@@ -306,6 +313,10 @@ if __name__ == '__main__':
     n = 0
     if namespace.n:
         n = int(namespace.n)
+    if not namespace.timeout:
+        timeout = 30
+    else:
+        timeout = int(namespace.timeout)
     headers = {'Content-Type': 'application/xml'}
     s = Sender(url, headers)
-    main(namespace.web, delay, dbg, n)
+    main(namespace.web, delay, dbg, n, timeout*60)
