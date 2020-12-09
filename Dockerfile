@@ -9,4 +9,4 @@ RUN export PIP_PROXY="http://tiger.bspb.ru:8080" && \
 WORKDIR /opt/app/
 EXPOSE 8080
 COPY fz44-platform.py /opt/app/
-CMD python3 fz44-platform.py --web --url $FZ44_URL --delay $FZ44_DELAY --debug $FZ44_DEBUG --n $FZ44_COUNT
+CMD python3 fz44-platform.py --web --url $FZ44_URL --delay $FZ44_DELAY --debug $FZ44_DEBUG --n $FZ44_COUNT --timeout $FZ44_TIMEOUT
