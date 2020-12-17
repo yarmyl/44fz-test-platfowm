@@ -284,7 +284,10 @@ def main(web, delay, dbg, n, t):
             if dbg:
                 print_log(str(d.print_queue()))
         if n == 0:
-            d.clear_timeout(t)
+            try:
+                d.clear_timeout(t)
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
             time.sleep(60*delay)
             i = 0
         else:
