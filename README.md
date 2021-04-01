@@ -44,8 +44,13 @@ docker run -p 80:8080 -d --name fz44-etp-test --restart always --env FZ44_URL=<e
 ## WEB SERVER URLs
 
 /status - show service status
+
 /cft-etp - xml-files reception 
+
 /print_queue - show requests without response
+
 /print_requests - show requests with response, debug level 1
+
 /remove?id=<id> - remove request from queue (GET method)
+
 /send - send XML-file (POST method) 
