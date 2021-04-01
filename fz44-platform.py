@@ -276,7 +276,9 @@ def main(web, delay, dbg, n, t):
             traceback.print_exc(file=sys.stdout)
             if web:
                 d.service_status({'service_status': 'service connection failed'})
+            s_delay = 0.1
         else:
+            s_delay = delay
             if web:
                 d.add_elem({ind: start_time})
                 d.service_status({'service_status': 'OK'})
@@ -288,7 +290,7 @@ def main(web, delay, dbg, n, t):
                 d.clear_timeout(t)
             except Exception:
                 traceback.print_exc(file=sys.stdout)
-            time.sleep(60*delay)
+            time.sleep(60*s_delay)
             i = 0
         else:
             i += 1
