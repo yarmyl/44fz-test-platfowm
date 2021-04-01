@@ -7,9 +7,6 @@
 ```
 fz44-platform.py [-h] [--web] [--url [URL]] [--delay [DELAY]]
                         [--debug [DEBUG]] [--timeout [TIMEOUT]] [--n [N]]
-
-  --n [N]
-
 ```
 
 **optional arguments:**
@@ -38,8 +35,9 @@ fz44-platform.py [-h] [--web] [--url [URL]] [--delay [DELAY]]
 
 ```docker build -t <image_name> .```
 
-```docker run -p 80:8080 -d --name fz44-etp-test --restart always --env FZ44_URL=<etp_url> \
-                 --env FZ44_DELAY=5 --env FZ44_TIMEOUT=30 -p <port>:8080 --env PYTHONUNBUFFERED=1 <image_name>```
+```docker run -p 80:8080 -d --name fz44-etp-test --restart always --env FZ44_URL=<etp_url>
+                 --env FZ44_DELAY=5 --env FZ44_TIMEOUT=30 
+                 -p <port>:8080 --env PYTHONUNBUFFERED=1 <image_name>```
 
 ## WEB SERVER URLs
 
